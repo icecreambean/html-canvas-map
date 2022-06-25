@@ -129,13 +129,32 @@ export class AppComponent implements OnInit, AfterViewInit {
     return { cx, cy, cr };
   }
 
+  getCanvasWidth() {
+    return "100%";
+  }
+
+  getCanvasCoordsFromObjectFit(eventX: number, eventY: number) {
+    if (this.ctx == null) return { x: 0, y: 0 };
+
+    // assuming: width: 100%, object-fit: contain,
+    // use HTML height and canvas aspect ratio to infer HTML width occupied
+    const htmlView = this.ctx.canvas.getBoundingClientRect();
+    const htmlCanvasWidth = htmlView.height / this.ctx.canvas.height * this.ctx.canvas.width;
+    const htmlSideOffset = (htmlView.width - htmlCanvasWidth) / 2;
+    // map this to the canvas dimensions
+    return { 
+      x: (eventX - htmlSideOffset) / htmlCanvasWidth * this.ctx.canvas.width,
+      y: eventY / htmlView.height * this.ctx.canvas.height
+    };
+  }
 
   onCanvasClick(event: MouseEvent) {
     if (this.ctx == null) return;
 
-    let rect = this.ctx.canvas.getBoundingClientRect();
-    let x = event.clientX - rect.left;
-    let y = event.clientY - rect.top;
+    // let rect = this.ctx.canvas.getBoundingClientRect();
+    // let x = event.clientX - rect.left;
+    // let y = event.clientY - rect.top;
+    let { x, y } = this.getCanvasCoordsFromObjectFit(event.x, event.y);
 
     // with object-fit support??
     // const rect = this.ctx.canvas.getBoundingClientRect();
@@ -153,15 +172,22 @@ export class AppComponent implements OnInit, AfterViewInit {
     // const y = event.clientY - rect.top + fitOffsetY/2;
     // console.log(x, event.clientX, rect.left, fitOffsetX);
 
-    console.log('onCanvasClick', rect, [x,y], [event.offsetX, event.offsetY]);
+    console.log(
+      'onCanvasClick:', 
+      '\n  rect', this.ctx.canvas.getBoundingClientRect(), 
+      '\n  canvas', [this.ctx.canvas.width, this.ctx.canvas.height], 
+      '\n  canvas HTML', this.canvasRef?.nativeElement,
+      '\n  event', [event.offsetX, event.offsetY],
+      '\n  computed', [x, y]
+    );
     for (let m of this.circleHistory) {
       // width/height:
       // - draw events use canvas
       // - click events use getBoundingClientRect
       const { cx, cy, cr } = this.getCircleParams(
         m, 
-        rect.width, 
-        rect.height
+        this.ctx.canvas.width, this.ctx.canvas.height, 
+        // rect.width, rect.height
       );
       const isIntersects = intersectCircle(x, y, cx, cy, cr);
 
