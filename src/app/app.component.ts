@@ -1,7 +1,4 @@
 import { AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
-import { transformFittedPoint } from './utils/object-fit-math/transform-fitted-point';
-import { FitMode } from './utils/object-fit-math/types';
-import { getImgSizeInfo } from './utils/object-fit-util';
 
 // https://jsfiddle.net/khrismuc/pvtesy68/
 // 
@@ -129,39 +126,42 @@ export class AppComponent implements OnInit, AfterViewInit {
     return { cx, cy, cr };
   }
 
+  private getCanvasCoordsFromObjectFit(eventX: number, eventY: number) {
+    if (this.ctx == null) return { x: 0, y: 0 };
+    // assuming the following CSS: "width: 100%; object-fit: contain"
+    // use HTML height and canvas aspect ratio to infer HTML width occupied
+    const htmlView = this.ctx.canvas.getBoundingClientRect();
+    const htmlCanvasWidth = (htmlView.height) / this.ctx.canvas.height * this.ctx.canvas.width;
+    const htmlSideOffset = (htmlView.width - htmlCanvasWidth) / 2;
+    // map this to the canvas dimensions
+    // console.log('htmlView:', [htmlCanvasWidth, htmlView.height]);
+    return { // canvas dimensions are returned
+      x: (eventX - htmlView.left - htmlSideOffset) / htmlCanvasWidth * this.ctx.canvas.width,
+      y: (eventY - htmlView.top) / htmlView.height * this.ctx.canvas.height
+    };
+  }
 
   onCanvasClick(event: MouseEvent) {
     if (this.ctx == null) return;
 
-    let rect = this.ctx.canvas.getBoundingClientRect();
-    let x = event.clientX - rect.left;
-    let y = event.clientY - rect.top;
+    // let rect = this.ctx.canvas.getBoundingClientRect();
+    // let x = event.clientX - rect.left;
+    // let y = event.clientY - rect.top;
+    let { x, y } = this.getCanvasCoordsFromObjectFit(event.x, event.y);
 
-    // with object-fit support??
-    // const rect = this.ctx.canvas.getBoundingClientRect();
-    // const { objectFit, objectPosition } = getComputedStyle( this.ctx.canvas );
-    // const [ left, top ] = objectPosition.split( ' ' );
-
-    // const { x: fitOffsetX, y: fitOffsetY } = transformFittedPoint(
-    //   // { x: event.offsetX, y: event.offsetY }, 
-    //   { x: 0, y: 0 }, 
-    //   rect, this.ctx.canvas, 
-    //   objectFit as FitMode, 
-    //   left, top
+    // console.log(
+    //   'onCanvasClick', 
+    //   '\n  rect:', [rect.width, rect.height], rect,
+    //   '\n  canvas:', [this.ctx.canvas.width, this.ctx.canvas.height],
+    //   '\n  event:', [event.offsetX, event.offsetY],
+    //   '\n  calc:', [x, y], 
     // );
-    // const x = event.clientX - rect.left + fitOffsetX/2;
-    // const y = event.clientY - rect.top + fitOffsetY/2;
-    // console.log(x, event.clientX, rect.left, fitOffsetX);
-
-    console.log('onCanvasClick', rect, [x,y], [event.offsetX, event.offsetY]);
     for (let m of this.circleHistory) {
-      // width/height:
-      // - draw events use canvas
-      // - click events use getBoundingClientRect
+      // compare event coords (in canvas format) to circle coords (in canvas format)
       const { cx, cy, cr } = this.getCircleParams(
         m, 
-        rect.width, 
-        rect.height
+        this.ctx.canvas.width,
+        this.ctx.canvas.height,
       );
       const isIntersects = intersectCircle(x, y, cx, cy, cr);
 
@@ -231,3 +231,41 @@ const WORKSTATIONS = [
     y: 75,
   }
 ];
+
+
+
+// // hacky: adjust based on aspect ratio of canvas
+// private AR_LOWER = 0.5;
+// private AR_UPPER = 10;
+// private AR_WIDTH_LOWER = 50;
+// private AR_WIDTH_UPPER = 100;
+// getCanvasCssWidth() {
+//   let res = 100;
+//   if (this.ctx != null) {
+//     const aspectRatio = this.ctx.canvas.width / this.ctx.canvas.height;
+//     if (aspectRatio >= this.AR_UPPER) {
+//       res = 100;
+//     } else if (aspectRatio <= this.AR_LOWER) {
+//       res = 25;
+//     } else { 
+//       res = 100 - (aspectRatio / (this.AR_UPPER - this.AR_LOWER)) * (this.AR_WIDTH_UPPER - this.AR_WIDTH_LOWER);
+//     }
+//     console.log('getCanvasCssWidth', 'AR', aspectRatio, 'width%', res);
+//   }
+//   return `${res}%`;
+// }
+
+// // hacky: adjust based on aspect ratio of canvas
+// getCanvasCssWidth() {
+//   let res = 100;
+//   if (this.ctx != null) {
+//     const aspectRatio = this.ctx.canvas.width / this.ctx.canvas.height;
+//     if (aspectRatio >= 0.75 || aspectRatio <= 1.5) {
+//       res = 50;
+//     } else {
+//       res = 100 - Math.min(aspectRatio * 50, 75);
+//     }
+//     console.log('getCanvasCssWidth', 'AR', aspectRatio, 'width%', res);
+//   }
+//   return `${res}%`;
+// }

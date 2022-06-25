@@ -1,25 +1,15 @@
 <h3>Canvas Test</h3>
 
-<div>
-  <!-- 
-    The following style can't be used: "max-height: 80vh; object-fit: contain".
-    This will scale the image correctly to fit within 1 page, but the scaling 
-    will not be reflected in the onCanvasClick() parameters.
-  -->
+<!-- 
+  Use "background-color: black;" to help debug "object-fit: contain"
+-->
+<div style="display: flex; justify-content: center">
   <canvas #canvasMap 
-    style="width: 100%; background-color: black; " 
+    style="width: 100%; max-height: 80vh; object-fit: contain" 
     (click)="onCanvasClick($event)"
   ></canvas>
-
-  <!-- 
-    Alternative: use [ngStyle] to compute a dynamic width % based on the aspect ratio 
-    of the canvas width/height. Use Flexbox to center the image.
-  -->
 </div>
-
 <div>
   <button (click)="onAddCircle()">Add Circle</button>
   <button (click)="reloadCanvas()">Reload Canvas</button>
 </div>
-
-<!-- <img #imgRef [src]="imgUrl" style="width: 90%" /> -->
