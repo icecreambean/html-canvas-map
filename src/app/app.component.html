@@ -1,14 +1,13 @@
 <h3>Canvas Test</h3>
 
-<!-- 
-  Use "background-color: black;" to help debug "object-fit: contain"
--->
-<div style="display: flex; justify-content: center">
-  <canvas #canvasMap 
-    style="width: 100%; max-height: 80vh; object-fit: contain" 
-    (click)="onCanvasClick($event)"
-  ></canvas>
-</div>
+<app-canvas-map
+  [mapMarkers]="workstations"
+  (onClickCircle)="onClickWorkstation($event)"
+  [imgUrl]="imgUrl"
+  [activeAvatarUrl]="activeAvatarUrl"
+  [inactiveAvatarUrl]="inactiveAvatarUrl"
+></app-canvas-map>
+
 <div>
   <button (click)="onAddCircle()">Add Circle</button>
   <button (click)="reloadCanvas()">Reload Canvas</button>
