@@ -21,5 +21,6 @@ npm start
 - Profile icons (supporting 2 status modes) have been added
 
 ### v3
+- Canvas map has been encapsulated into its own Angular component
 - Now works with "object-fit: contains"
 - Image is auto-centered horizontally using flexbox
